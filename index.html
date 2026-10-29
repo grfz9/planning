@@ -29,14 +29,14 @@
   --f-ui:"Schibsted Grotesk", -apple-system, "Segoe UI", system-ui, sans-serif;
   --bleu-bg:#E3ECFF; --bleu:#3567E6; --rose-bg:#FFE3EC; --rose:#E0457B; --violet-bg:#EEE6FF; --violet:#7C4DE6;
   --turquoise-bg:#DCF5F2; --turquoise:#0F9E95; --orange-bg:#FFEBD9; --orange:#E2701A; --jaune-bg:#FFF4C7; --jaune:#B98700;
-  --vert-bg:#DFF5E3; --vert:#2E9E48; --rouge-bg:#FFE2DE; --rouge:#D93A2B; --gris-bg:#ECEEF3; --gris:#6B7591;
+  --vert-bg:#DFF5E3; --vert:#2E9E48; --ciel-bg:#DDF1FF; --ciel:#1689C9; --rouge-bg:#FFE2DE; --rouge:#D93A2B; --gris-bg:#ECEEF3; --gris:#6B7591;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0C1120; --panel:#131A2C; --col:#10172A; --line:#1E2840; --line-2:#2B3754; --ink:#E6EBF7; --muted:#8E99B6;
   --card-shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.25);
   --bleu-bg:#1C2A52; --bleu:#7EA2FF; --rose-bg:#45182B; --rose:#FF7FA8; --violet-bg:#2C2052; --violet:#B095FF;
   --turquoise-bg:#0F3A38; --turquoise:#4ED6CB; --orange-bg:#44270E; --orange:#FFA35C; --jaune-bg:#3D3209; --jaune:#F2CB45;
-  --vert-bg:#14361E; --vert:#64D17A; --rouge-bg:#481B17; --rouge:#FF7B6E; --gris-bg:#242C42; --gris:#A6AFC8;
+  --vert-bg:#14361E; --vert:#64D17A; --ciel-bg:#0E3247; --ciel:#5EC4FF; --rouge-bg:#481B17; --rouge:#FF7B6E; --gris-bg:#242C42; --gris:#A6AFC8;
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
@@ -44,7 +44,7 @@
   --card-shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.25);
   --bleu-bg:#1C2A52; --bleu:#7EA2FF; --rose-bg:#45182B; --rose:#FF7FA8; --violet-bg:#2C2052; --violet:#B095FF;
   --turquoise-bg:#0F3A38; --turquoise:#4ED6CB; --orange-bg:#44270E; --orange:#FFA35C; --jaune-bg:#3D3209; --jaune:#F2CB45;
-  --vert-bg:#14361E; --vert:#64D17A; --rouge-bg:#481B17; --rouge:#FF7B6E; --gris-bg:#242C42; --gris:#A6AFC8;
+  --vert-bg:#14361E; --vert:#64D17A; --ciel-bg:#0E3247; --ciel:#5EC4FF; --rouge-bg:#481B17; --rouge:#FF7B6E; --gris-bg:#242C42; --gris:#A6AFC8;
   color-scheme:dark;
 }
 @media (max-width:700px){:root{--H:52px;--gutter:42px;--colw:calc((100vw - var(--gutter)) / 2)}}
@@ -79,7 +79,8 @@ button{cursor:pointer;touch-action:manipulation}
 .lab{display:inline-flex;align-items:center;gap:6px;border-radius:7px;padding:3px 9px 3px 7px;font-size:12.5px;font-weight:600;background:var(--bg-l);color:var(--ink);border:0;flex:none;line-height:1.3}
 .lab::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--fg-l)}
 .filters .lab{cursor:pointer}
-.filters .lab[aria-pressed="false"]{opacity:.35}
+.filters .lab[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.showall{flex:none;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:2px 9px;font-size:12.5px;font-weight:700}
 @media (max-width:700px){.top h1{font-size:30px}.wk{order:3;flex-basis:100%}.wk .lbl{margin-left:auto}.filters{order:4}.hide-sm{display:none}}
 
 /* Zone principale */
@@ -329,13 +330,13 @@ textarea.desc{padding:10px;min-height:76px;resize:vertical}
 (function(){
 "use strict";
 /* ---------- Constantes ---------- */
-const COLORS=["bleu","rose","violet","turquoise","orange","jaune","vert","rouge","gris"];
+const COLORS=["bleu","ciel","rose","violet","turquoise","orange","jaune","vert","rouge","gris"];
 const ACCENTS=["#FF5C7A","#5B5BF7","#12A37A","#E8930C","#1597C9","#A346C9"];
 const DEFAULT_CATS=[
   {id:"ads",name:"Ads & marketing",color:"bleu"},{id:"crea",name:"Contenu / créas",color:"rose"},
   {id:"prod",name:"Produit",color:"violet"},{id:"sav",name:"Service client",color:"turquoise"},
   {id:"cmd",name:"Commandes & stock",color:"orange"},{id:"chiffres",name:"Chiffres",color:"jaune"},
-  {id:"perso",name:"Perso / sport",color:"vert"},{id:"urgent",name:"Urgent",color:"rouge"}
+  {id:"perso",name:"Perso",color:"vert"},{id:"sport",name:"Sport",color:"ciel"},{id:"urgent",name:"Urgent",color:"rouge"}
 ];
 const ALERTS=[[-1,"Aucun"],[0,"À l'heure"],[5,"5 min avant"],[10,"10 min avant"],[15,"15 min avant"],[30,"30 min avant"],[60,"1 h avant"]];
 const DAYS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -380,6 +381,10 @@ function migrate(){
 function load(){ try{ const v=JSON.parse(localStorage.getItem(STORE)); if(v&&Array.isArray(v.cards)) return v; }catch(e){} return migrate(); }
 let S=Object.assign({cats:DEFAULT_CATS.map(c=>({...c})),cards:[],accent:ACCENTS[0],from:8,to:24,sound:false,defAlert:10,hidden:[]}, load()||{});
 if(!S.cats.length) S.cats=DEFAULT_CATS.map(c=>({...c}));
+// ancienne étiquette « Perso / sport » : on la sépare en « Perso » et « Sport »
+(()=>{ const ps=S.cats.find(c=>c.id==="perso"&&/sport/i.test(c.name)); if(!ps) return;
+  ps.name="Perso"; if(!S.cats.some(c=>c.id==="sport")) S.cats.splice(S.cats.indexOf(ps)+1,0,{id:"sport",name:"Sport",color:"ciel"});
+  S.cards.forEach(c=>{ if(c.labels.includes("perso") && /\b(sport|salle|muscu|foot|running|gym|fitness)\b/i.test(c.title)) c.labels=c.labels.map(l=>l==="perso"?"sport":l); }); })();
 if(!ACCENTS.includes(S.accent)) S.accent=ACCENTS[0];
 let saveT;
 function save(now){ clearTimeout(saveT); const w=()=>{ try{ localStorage.setItem(STORE,JSON.stringify(S)); }catch(e){ toast("Impossible d'enregistrer : stockage du navigateur plein ou bloqué."); } }; if(now) w(); else saveT=setTimeout(w,250); }
@@ -479,8 +484,10 @@ function renderInbox(){
   box.replaceChildren(...(list.length? list.filter(visible).map(c=>chipEl(c,INBOX)) : [el("p",{class:"empty"},"Note ici ce que tu dois faire sans savoir encore quand. Glisse ensuite la carte sur un créneau.")]));
 }
 function renderFilters(){
-  $("#filters").replaceChildren(...S.cats.map(cat=>el("button",{type:"button",class:"lab",style:cv(cat.color),"aria-pressed":String(!S.hidden.includes(cat.id)),title:"Afficher ou masquer",
-    onclick:()=>{ S.hidden=S.hidden.includes(cat.id)?S.hidden.filter(x=>x!==cat.id):[...S.hidden,cat.id]; save(); render(); }},cat.name)));
+  const n=S.hidden.filter(id=>catOf(id)).length;
+  $("#filters").replaceChildren(...S.cats.map(cat=>el("button",{type:"button",class:"lab",style:cv(cat.color),"aria-pressed":String(!S.hidden.includes(cat.id)),title:S.hidden.includes(cat.id)?"Masquée : touche pour l'afficher":"Touche pour masquer ces cartes",
+    onclick:()=>{ const h=S.hidden.includes(cat.id); S.hidden=h?S.hidden.filter(x=>x!==cat.id):[...S.hidden,cat.id]; save(); render(); if(!h) toast("Cartes « "+cat.name+" » masquées"); }},cat.name)),
+    n? el("button",{type:"button",class:"showall",onclick:()=>{ S.hidden=[]; save(); render(); }},n+" masquée"+(n>1?"s":"")+" · Tout afficher") : "");
 }
 function updateNow(){
   const day=document.querySelector(".day.tdy"); if(!day||week!==mondayOf(todayKey())){ return; }
@@ -593,7 +600,9 @@ function drawCard(){
   $("#cTitle").value=c.title;
   $("#cWhere").textContent= k===INBOX? "Dans « À caser »" : DAYS[wdOf(k)]+" "+parseKey(k).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+(c.start!=null?" · "+hm(c.start)+"–"+hm24(c.start+(c.dur||60)):" · sans heure");
   $("#cLabs").replaceChildren(...S.cats.map(cat=>el("button",{type:"button",class:"lab",style:cv(cat.color),"aria-pressed":String(c.labels.includes(cat.id)),
-    onclick:()=>{ c.labels=c.labels.includes(cat.id)? c.labels.filter(x=>x!==cat.id) : [...c.labels,cat.id]; save(); drawCard(); render(); }},cat.name)),
+    onclick:()=>{ const add=!c.labels.includes(cat.id); c.labels=add? [...c.labels,cat.id] : c.labels.filter(x=>x!==cat.id);
+      if(add && S.hidden.includes(cat.id)){ S.hidden=S.hidden.filter(x=>x!==cat.id); toast("« "+cat.name+" » était masquée : elle est de nouveau affichée"); }
+      save(); drawCard(); render(); }},cat.name)),
     el("button",{type:"button",class:"lab edit",onclick:openCats},"Modifier"));
   const ds=$("#cDay"); ds.replaceChildren(el("option",{value:INBOX},"À caser (sans date)"));
   for(let i=0;i<7;i++){ const kk=addDays(week,i); ds.append(el("option",{value:kk},DAYS[i]+" "+parseKey(kk).getDate())); }
