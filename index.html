@@ -370,6 +370,38 @@ body.painting .mdays{touch-action:none}
 .ftab tr.cur-m th{color:var(--accent)}
 .ftab tfoot td,.ftab tfoot th{font-weight:800;border-bottom:0;font-variant-numeric:tabular-nums;text-align:right}
 .ftab tfoot th{text-align:center}
+/* Aujourd'hui */
+body.v-aujourdhui #p-aujourdhui{display:block}
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.dash .box{display:flex;flex-direction:column}
+.dash .bd{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.dash .big{font-family:var(--f-hand);font-size:44px;font-weight:700;line-height:1}
+.dash .muted{color:var(--muted);font-size:13.5px;margin:0}
+.dl{display:flex;flex-direction:column}
+.dl .r{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:40px;border-bottom:1px solid var(--line)}
+.dl .r:last-child{border-bottom:0}
+.dl .r time{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dl .r span{overflow-wrap:anywhere}
+.dl .r.done span{text-decoration:line-through;color:var(--muted)}
+.dl .r input{width:20px;height:20px;accent-color:var(--accent)}
+.hchips{display:flex;flex-wrap:wrap;gap:6px}
+.hchip{border:1px solid var(--line-2);background:var(--col);border-radius:10px;padding:6px 10px;font-weight:600;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.hchip b{min-width:26px;text-align:center;border-radius:6px;padding:1px 4px;background:var(--line);font-variant-numeric:tabular-nums}
+.hchip[data-v="1"] b{background:#3FB37F;color:#fff}.hchip[data-v="0.5"] b{background:#F4C76B;color:#222}.hchip[data-v="0"] b{background:#F07C7C;color:#fff}
+.pbar2{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.pbar2 i{display:block;height:100%;background:#3FB37F}
+.quick{display:flex;gap:8px;align-items:center}
+.quick input{flex:1;min-width:0;border:1px solid var(--line-2);background:var(--col);border-radius:10px;min-height:40px;padding:0 10px;font-size:16px}
+/* Échéances */
+.item{grid-template-columns:36px minmax(0,1fr) auto 28px!important}
+.item input[type=date]{border:0;background:transparent;font-size:12px;color:var(--muted);max-width:122px;min-height:36px;padding:0 4px}
+.item input[type=date].set{color:var(--accent);font-weight:700}
+.dc.goal::before{content:"★";position:absolute;left:3px;top:1px;font-size:10px;line-height:1;color:currentColor}
+/* Pastille de synchro */
+.syncpill{position:fixed;z-index:44;left:max(14px, env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;
+  background:var(--panel);border:1px solid var(--line-2);border-radius:12px;padding:8px 8px 8px 12px;box-shadow:0 8px 24px rgba(8,12,26,.18);font-size:13.5px;font-weight:600;max-width:calc(100% - 28px)}
+.syncpill .btn{min-height:32px;font-size:13px}
+.syncpill.ok{padding-right:12px;color:#2E9E48}
 /* Tuto */
 .tuto{max-width:480px;text-align:center;align-items:center}
 .tuto .ill{width:84px;height:84px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-hand);font-size:44px;font-weight:700}
@@ -394,7 +426,7 @@ body.painting .mdays{touch-action:none}
 
 <header class="top">
   <h1>Mon <i>planning</i></h1>
-  <nav class="views" aria-label="Pages"><button type="button" data-v="semaine" aria-pressed="true">Semaine</button><button type="button" data-v="annee" aria-pressed="false">Année</button><button type="button" data-v="vision" aria-pressed="false">Vision</button><button type="button" data-v="habitudes" aria-pressed="false">Habitudes</button><button type="button" data-v="routine" aria-pressed="false">Routine</button><button type="button" data-v="finances" aria-pressed="false">Finances</button></nav>
+  <nav class="views" aria-label="Pages"><button type="button" data-v="aujourdhui" aria-pressed="false">Aujourd'hui</button><button type="button" data-v="semaine" aria-pressed="true">Semaine</button><button type="button" data-v="annee" aria-pressed="false">Année</button><button type="button" data-v="vision" aria-pressed="false">Vision</button><button type="button" data-v="habitudes" aria-pressed="false">Habitudes</button><button type="button" data-v="routine" aria-pressed="false">Routine</button><button type="button" data-v="finances" aria-pressed="false">Finances</button></nav>
   <div class="yr"><button class="btn icon" id="yPrev" aria-label="Année précédente">‹</button><b id="yLabel" class="num"></b><button class="btn icon" id="yNext" aria-label="Année suivante">›</button></div>
   <div class="wk">
     <button class="btn icon" id="prev" aria-label="Semaine précédente">‹</button>
@@ -425,7 +457,7 @@ body.painting .mdays{touch-action:none}
     <aside class="wside">
       <div class="box">
         <h3>Légende</h3>
-        <p class="hint">Choisis une période, puis touche ou glisse sur les jours pour les colorier. Retouche un jour pour l'effacer.</p>
+        <p class="hint">Choisis une période, puis touche ou glisse sur les jours pour les colorier. Retouche un jour pour l'effacer.<br>Pour placer un objectif ou un voyage dans l'année, donne-lui une date dans les listes ci-dessous : il apparaît avec une ★.</p>
         <div id="keyList"></div>
         <div class="palette" id="palette" hidden></div>
         <button class="addrow" id="keyAdd">+ Ajouter une période</button>
@@ -433,6 +465,14 @@ body.painting .mdays{touch-action:none}
       <div id="lists"></div>
       <button class="btn" id="listAdd" style="align-self:flex-start">+ Ajouter une liste</button>
     </aside>
+  </div>
+</section>
+
+<section class="page" id="p-aujourdhui" aria-label="Aujourd'hui">
+  <div class="pwrap">
+    <h2 class="ptitle" id="dHello">Bonjour</h2>
+    <p id="dDate"></p>
+    <div class="dash" id="dash"></div>
   </div>
 </section>
 
@@ -600,6 +640,7 @@ body.painting .mdays{touch-action:none}
 
 <div class="pop" id="pop" role="alertdialog" aria-live="assertive" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<div class="syncpill" id="syncPill" role="status" hidden></div>
 
 <script src="config.js"></script>
 <script>
@@ -1115,7 +1156,8 @@ function setBrush(b){ brush=b; document.body.classList.toggle("painting",!!brush
 function renderWar(){
   warInit(); const Y=W().year, tk=todayKey();
   $("#yLabel").textContent=Y;
-  const Q=$("#quarters"), frag=document.createDocumentFragment();
+  const Q=$("#quarters"), frag=document.createDocumentFragment(), goalsOn={};
+  W().lists.forEach(L=>L.items.forEach(it=>{ if(it.date&&it.t) (goalsOn[it.date]||(goalsOn[it.date]=[])).push(it.t); }));
   const counts={}; Object.entries(W().days).forEach(([k,id])=>{ if(k.startsWith(Y+"-")) counts[id]=(counts[id]||0)+1; });
   for(let q=0;q<4;q++){
     const qd=el("div",{class:"quarter"},el("div",{class:"qlab"},"T"+(q+1)));
@@ -1126,9 +1168,9 @@ function renderWar(){
       for(let i=0;i<42;i++){
         if(i%7===0 && k>lastK) break;
         const d=parseKey(k), out=d.getMonth()!==mi, pid=W().days[k], p=pid&&perOf(pid);
-        const hasCards=!out && cardsFor(k).length>0;
-        md.append(el("button",{type:"button",class:"dc"+(out?" out":"")+(k===tk?" tdy":"")+(hasCards?" has":""),"data-k":k,style:p?pv(p):null,
-          title:(p?p.name+" · ":"")+d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})+(hasCards?" · "+cardsFor(k).length+" carte(s)":"")},
+        const hasCards=!out && cardsFor(k).length>0, gl=!out&&goalsOn[k];
+        md.append(el("button",{type:"button",class:"dc"+(out?" out":"")+(k===tk?" tdy":"")+(hasCards?" has":"")+(gl?" goal":""),"data-k":k,style:p?pv(p):null,
+          title:(gl?"★ "+gl.join(", ")+" · ":"")+(p?p.name+" · ":"")+d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})+(hasCards?" · "+cardsFor(k).length+" carte(s)":"")},
           out? d.getDate()+" "+d.toLocaleDateString("fr-FR",{month:"short"}).replace(".","") : d.getDate()));
         k=addDays(k,1);
       }
@@ -1189,7 +1231,9 @@ function drawLists(){
     const items=L.items.map(it=>{
       const cb=el("input",{type:"checkbox","aria-label":"Fait"}); cb.checked=!!it.done;
       const tx=el("input",{type:"text",value:it.t,maxlength:"100","aria-label":"Élément"});
-      const row=el("div",{class:"item"+(it.done?" on":"")},cb,tx,el("button",{type:"button","aria-label":"Supprimer",onclick:()=>{ L.items=L.items.filter(x=>x!==it); save(); drawLists(); }},"×"));
+      const dt=el("input",{type:"date",value:it.date||"",class:it.date?"set":"","aria-label":"Date (place l'élément dans l'année)",title:"Date : l'élément apparaît avec une ★ dans l'année"});
+      dt.onchange=()=>{ it.date=dt.value||""; save(); renderWar(); if(it.date) toast("Placé le "+parseKey(it.date).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+" : repère la ★ dans l'année"); };
+      const row=el("div",{class:"item"+(it.done?" on":"")},cb,tx,dt,el("button",{type:"button","aria-label":"Supprimer",onclick:()=>{ L.items=L.items.filter(x=>x!==it); save(); drawLists(); }},"×"));
       cb.onchange=()=>{ it.done=cb.checked; row.classList.toggle("on",it.done); save(); }; tx.oninput=()=>{ it.t=tx.value; save(); };
       return row; });
     const add=el("button",{type:"button",class:"addrow",onclick:()=>{ L.items.push({t:"",done:false}); save(); drawLists();
@@ -1222,7 +1266,7 @@ $("#quarters").addEventListener("click",e=>{
 function curDayJump(k){ week=mondayOf(k); setView("semaine"); render(); requestAnimationFrame(()=>{ const h=document.querySelector('.dhead[data-k="'+k+'"]'), B=$("#board"), gw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gutter"))||52; if(h) B.scrollLeft=h.offsetLeft-gw; }); }
 $("#yPrev").onclick=()=>{ W().year--; save(); renderWar(); };
 $("#yNext").onclick=()=>{ W().year++; save(); renderWar(); };
-const VIEWS=["semaine","annee","vision","habitudes","routine","finances"];
+const VIEWS=["aujourdhui","semaine","annee","vision","habitudes","routine","finances"];
 let view="semaine";
 function setView(v){
   if(!VIEWS.includes(v)) v="semaine"; view=v;
@@ -1233,7 +1277,7 @@ function setView(v){
   refresh();
 }
 function refresh(){
-  if(view==="annee") renderWar(); else if(view==="vision") renderVision(); else if(view==="habitudes") renderHabits();
+  if(view==="aujourdhui") renderDash(); else if(view==="annee") renderWar(); else if(view==="vision") renderVision(); else if(view==="habitudes") renderHabits();
   else if(view==="routine") renderRoutine(); else if(view==="finances") renderFin(); else render();
 }
 document.querySelectorAll(".views button").forEach(b=>b.onclick=()=>setView(b.dataset.v));
@@ -1426,19 +1470,35 @@ async function cloudPull(){
 async function cloudPush(){
   if(!sb||!cloudUser) return; pushing=true; cloudState="sync"; setAcct();
   try{ const {error}=await sb.from("planners").upsert({user_id:cloudUser.id,data:S,updated_at:new Date(S.updatedAt||Date.now()).toISOString()});
-    if(error) throw error; cloudState="ok"; lastSync=Date.now(); cloudErr=""; }
+    if(error) throw error; cloudState="ok"; lastSync=Date.now(); cloudErr=""; dirtySince=0; clearTimeout(pushT); pushT=null; const P=$("#syncPill"); if(P&&!P.hidden&&!P.classList.contains("ok")&&P.textContent.startsWith("Modif")) P.hidden=true; }
   catch(e){ cloudState="err"; cloudErr="Synchronisation impossible : "+(e.message||"erreur réseau")+". Tes changements restent sur cet appareil et repartiront au prochain essai."; }
   pushing=false; setAcct();
 }
-function cloudDirty(){ if(!cloudUser) return; clearTimeout(pushT); pushT=setTimeout(cloudPush,1500); }
+let dirtySince=0, pillT=null;
+function cloudDirty(){
+  if(!CLOUD) return;
+  if(!cloudUser){ if(!sessionStorage.getItem("planning.pillno")) showPill("local"); return; }
+  if(!dirtySince) dirtySince=Date.now();
+  showPill("dirty"); clearTimeout(pushT); pushT=setTimeout(syncNow,20000);
+}
+async function syncNow(){ clearTimeout(pushT); pushT=null; showPill("sync"); await cloudPush(); if(cloudState==="ok"){ dirtySince=0; showPill("ok"); } else showPill("err"); }
+function showPill(st){
+  const P=$("#syncPill"); clearTimeout(pillT); P.className="syncpill"; P.hidden=false;
+  if(st==="local") P.replaceChildren(el("span",null,"Tes modifs sont seulement sur cet appareil"),el("button",{class:"btn main",onclick:()=>{P.hidden=true;openAcct();}},"Se connecter"),el("button",{class:"btn ghost icon","aria-label":"Masquer",onclick:()=>{P.hidden=true;try{sessionStorage.setItem("planning.pillno","1")}catch(e){}}},"×"));
+  else if(st==="dirty") P.replaceChildren(el("span",null,"Modifications non synchronisées"),el("button",{class:"btn main",onclick:syncNow},"Synchroniser"));
+  else if(st==="sync") P.replaceChildren(el("span",null,"Synchronisation…"));
+  else if(st==="err") P.replaceChildren(el("span",{style:"color:var(--rouge)"},"Synchro impossible (réseau ?)"),el("button",{class:"btn",onclick:syncNow},"Réessayer"));
+  else { P.classList.add("ok"); P.replaceChildren(el("span",null,"✓ Synchronisé sur tes appareils")); pillT=setTimeout(()=>P.hidden=true,2500); }
+}
 async function cloudCheck(){
   if(!sb||!cloudUser||pushing||pushT&&cloudState==="sync") return;
   try{ const {data}=await sb.from("planners").select("updated_at").eq("user_id",cloudUser.id).maybeSingle();
-    if(data && new Date(data.updated_at).getTime()>(S.updatedAt||0)+500 && !cur){ const r=await cloudPull(); if(r){ applyRemote(r); refresh(); toast("Planning mis à jour depuis ton autre appareil"); } }
+    if(data && !dirtySince && new Date(data.updated_at).getTime()>(S.updatedAt||0)+500 && !cur){ const r=await cloudPull(); if(r){ applyRemote(r); refresh(); toast("Planning mis à jour depuis ton autre appareil"); } }
     else if(cloudState==="err") await cloudPush();
   }catch(e){}
 }
 window.addEventListener("online",()=>cloudCheck());
+window.addEventListener("pagehide",()=>{ if(dirtySince&&cloudUser) cloudPush(); });
 async function cloudUploadImg(id,blob){ if(!sb||!cloudUser) return; try{ await sb.storage.from("vision").upload(cloudUser.id+"/"+id+".jpg",blob,{contentType:"image/jpeg",upsert:true}); }catch(e){} }
 async function cloudDownloadImg(id){ if(!sb||!cloudUser) return null; try{ const {data,error}=await sb.storage.from("vision").download(cloudUser.id+"/"+id+".jpg"); return error?null:data; }catch(e){ return null; } }
 async function moveGuestImages(uidv){
@@ -1500,6 +1560,53 @@ $("#acctBtn").onclick=()=>openAcct();
 $("#acctClose").onclick=()=>$("#acctScrim").hidden=true;
 
 
+
+
+/* ---------- Aujourd'hui (tableau de bord) ---------- */
+function renderDash(){
+  const k=todayKey(), d=new Date(), h=d.getHours();
+  $("#dHello").textContent=(h<5?"Bonne nuit":h<12?"Bonjour":h<18?"Bon après-midi":"Bonsoir")+(cloudUser?" !":" !");
+  $("#dDate").textContent=cap(d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))+(S.war&&S.war.days[k]&&perOf(S.war.days[k])?" · Période : "+perOf(S.war.days[k]).name:"");
+  const box=(title,...kids)=>el("div",{class:"box"},el("h3",null,title),el("div",{class:"bd"},...kids));
+  // Cartes du jour
+  const cards=cardsFor(k).filter(c=>c.title).sort((a,b)=>(a.start??9999)-(b.start??9999)), n=nowMin();
+  const next=cards.find(c=>!isDone(c,k)&&c.start!=null&&c.start+(c.dur||30)>n);
+  const dl=el("div",{class:"dl"},...cards.map(c=>{ const cb=el("input",{type:"checkbox","aria-label":"Terminée"}); cb.checked=isDone(c,k);
+    cb.onchange=()=>{ c.done=cb.checked?[...new Set([...(c.done||[]),k])]:(c.done||[]).filter(x=>x!==k); save(); renderDash(); };
+    return el("div",{class:"r"+(isDone(c,k)?" done":"")},el("time",null,c.start!=null?hm(c.start):"—"),el("span",null,c.title),cb); }));
+  const dn=cards.filter(c=>isDone(c,k)).length;
+  const b1=box("Ma journée", el("p",{class:"muted"}, cards.length? dn+" sur "+cards.length+" faites"+(next?" · Prochaine : "+hm(next.start)+" "+next.title:"") : "Rien de prévu aujourd'hui."),
+    cards.length?dl:"", el("button",{class:"btn",style:"align-self:flex-start",onclick:()=>{ week=mondayOf(k); setView("semaine"); newCard(k,Math.max(S.from*60,Math.min(Math.ceil(n/30)*30,S.to*60-60))); }},"+ Ajouter une tâche aujourd'hui"));
+  // Habitudes
+  const H=S.habits, hl=H.list.filter(x=>x.name);
+  const chips=el("div",{class:"hchips"},...hl.map(x=>{ const v=H.log[k]&&H.log[k][x.id];
+    return el("button",{type:"button",class:"hchip","data-v":v==null?"":String(v),onclick:()=>{ const L=H.log; const nx=v==null?1:v===1?0.5:v===0.5?0:null; if(nx==null){ if(L[k]){ delete L[k][x.id]; } } else (L[k]||(L[k]={}))[x.id]=nx; save(); renderDash(); }},el("b",null,v==null?"·":fmtV(v)),x.name); }));
+  const b2=box("Habitudes du jour", hl.length? chips : el("p",{class:"muted"},"Ajoute tes habitudes dans l'onglet Habitudes."), el("p",{class:"muted"},"Touche : 1 → 0,5 → 0 → vide"));
+  // Routine
+  const R=S.routine, ri=R.items.filter(i=>i.t.trim()), rd=(R.done[k]||[]).filter(id=>ri.some(i=>i.id===id)).length;
+  const b3=box("Routine", el("p",{class:"muted"}, ri.length? rd+" / "+ri.length+" étapes" : "Définis ta routine dans l'onglet Routine."), el("div",{class:"pbar2"},el("i",{style:"width:"+(ri.length?Math.round(rd/ri.length*100):0)+"%"})),
+    el("button",{class:"btn",style:"align-self:flex-start",onclick:()=>setView("routine")},"Ouvrir ma routine"));
+  // Finances du mois
+  const mk=k.slice(0,7), fm=S.fin.months[mk]||{}, g=numFR(fm.goal), r=numFR(fm.real), pc=g&&r!=null?Math.round(r/g*100):null;
+  const daysIn=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(), dayN=d.getDate();
+  const add=el("input",{inputmode:"decimal",placeholder:"Ajouter une vente / CA du jour (€)","aria-label":"Montant à ajouter au réalisé du mois"});
+  const addB=el("button",{class:"btn main",onclick:()=>{ const v=numFR(add.value); if(v==null){ toast("Entre un montant, par exemple 250"); return; } const o=S.fin.months[mk]||(S.fin.months[mk]={}); o.real=String((numFR(o.real)||0)+v); save(); renderDash(); toast("+"+eur0(v)+" ajouté au mois"); }},"Ajouter");
+  const b4=box("Objectif du mois",
+    el("div",{class:"big num"}, r!=null? eur0(r) : "0 €"),
+    el("p",{class:"muted"}, g? "sur "+eur0(g)+" ("+(pc??0)+" %) · rythme attendu à ce jour : "+eur0(g*dayN/daysIn) : "Fixe ton objectif du mois dans l'onglet Finances."),
+    el("div",{class:"pbar2"},el("i",{style:"width:"+Math.min(100,pc||0)+"%"})), el("div",{class:"quick"},add,addB));
+  // Objectifs du mois (année)
+  const G=(S.war&&S.war.goals[mk])||[], gf=G.filter(x=>x.t);
+  const b5=box("Objectifs de "+MOIS[d.getMonth()], gf.length? el("div",{class:"dl"},...gf.map(x=>{ const cb=el("input",{type:"checkbox"}); cb.checked=!!x.done; cb.onchange=()=>{ x.done=cb.checked; save(); renderDash(); };
+      return el("div",{class:"r"+(x.done?" done":"")},el("time",null,"★"),el("span",null,x.t),cb); })) : el("p",{class:"muted"},"Note 3 objectifs pour ce mois dans l'onglet Année."));
+  // À venir
+  const up=[]; if(S.war){ S.war.lists.forEach(L=>L.items.forEach(it=>{ if(it.date&&it.date>=k&&it.t&&!it.done) up.push([it.date,it.t,L.title]); }));
+    const seen=new Set(); Object.keys(S.war.days).sort().forEach(dk=>{ const id=S.war.days[dk]; if(dk>k && !seen.has(id) && S.war.days[addDays(dk,-1)]!==id){ seen.add(id); const pp=perOf(id); if(pp) up.push([dk,"Début : "+pp.name,"Période"]); } }); }
+  up.sort((a,b)=>a[0]<b[0]?-1:1);
+  const daysTo=x=>Math.round((parseKey(x)-parseKey(k))/864e5);
+  const b6=box("À venir", up.length? el("div",{class:"dl"},...up.slice(0,6).map(([dk,t,src])=>el("div",{class:"r"},el("time",null,daysTo(dk)===0?"Auj.":"J-"+daysTo(dk)),el("span",null,t),el("small",{class:"muted"},src)))) : el("p",{class:"muted"},"Donne une date à tes objectifs (onglet Année) ou colorie tes périodes pour voir le compte à rebours ici."));
+  $("#dash").replaceChildren(b1,b4,b2,b3,b5,b6);
+}
 /* ---------- Tuto de première visite + invitation à se connecter ---------- */
 const TUTO=[
   ["👋","Bienvenue !","Ce planning t'aide à organiser ta semaine, ton année et tes objectifs. Voici l'essentiel en 1 minute."],
@@ -1550,7 +1657,7 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ tick();
 window.addEventListener("storage",e=>{ if(e.key===STORE_KEY&&!cur){ const v=load(); if(v){ S=normalize(v); refresh(); } } });
 
 warInit(); fillStatic(); render(); requestAnimationFrame(scrollToNow); tick();
-setView(location.hash.slice(1)||"semaine");
+setView(location.hash.slice(1)||"aujourdhui");
 cloudInit();
 if(!localStorage.getItem("planning.tuto") && !location.hash.includes("=")) setTimeout(openTuto,300);
 else if(!S.cards.length && view==="semaine") setTimeout(()=>toast("Touche une case vide pour ajouter une carte à cette heure"),600);

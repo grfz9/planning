@@ -1,5 +1,5 @@
 // Garde le planning disponible hors connexion et affiche les notifications.
-const CACHE = "planning-v9";
+const CACHE = "planning-v10";
 const FILES = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
