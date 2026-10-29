@@ -170,10 +170,14 @@ button{cursor:pointer;touch-action:manipulation}
 .inlist{font-size:13px;color:var(--muted);margin:-10px 0 0 6px}
 .labpick{display:flex;flex-wrap:wrap;gap:6px}
 .labpick .lab{cursor:pointer;min-height:32px;font-size:13.5px;padding:0 10px 0 8px}
-.labpick .lab[aria-pressed="false"]{opacity:.45}
+.labpick .lab[aria-pressed="false"]{opacity:.6}
 .labpick .lab[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--fg-l)}
 .labpick .edit{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted)}
 .labpick .edit::before{display:none}
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wdays button{border:1px solid var(--line-2);background:var(--col);border-radius:10px;min-height:44px;font-weight:700;font-size:14px;padding:0}
+.wdays button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.wdays button:disabled{opacity:.4;cursor:default}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .f{display:flex;flex-direction:column;gap:5px;min-width:0}
 .f > span{font-size:12.5px;font-weight:600;color:var(--muted)}
@@ -255,11 +259,15 @@ textarea.desc{padding:10px;min-height:76px;resize:vertical}
       <label class="f"><span>Autre date</span><input type="date" id="cDate"></label>
     </div>
     <div class="grid2">
-      <label class="f"><span>Heure</span><select id="cStart"></select></label>
-      <label class="f"><span>Durée</span><select id="cDur"></select></label>
+      <label class="f"><span>De</span><select id="cStart"></select></label>
+      <label class="f"><span>À</span><select id="cEnd"></select></label>
     </div>
     <label class="f"><span>Rappel</span><select id="cAlert"></select></label>
-    <label class="sw"><span><b>Chaque semaine</b><small id="cRepTxt"></small></span><input type="checkbox" id="cRepeat"></label>
+    <div class="sec"><span class="k">Répéter chaque semaine</span>
+      <div class="wdays" id="cWds" role="group" aria-label="Jours de répétition"></div>
+      <div class="foot"><button type="button" class="btn" id="cWeekdays">Lun → ven</button><button type="button" class="btn" id="cNoRep">Ne pas répéter</button></div>
+      <p class="note" id="cRepTxt"></p>
+    </div>
     <div class="sec"><span class="k">Description</span><textarea class="desc" id="cDesc" maxlength="1000" placeholder="Détails, lien, idée…"></textarea></div>
     <div class="sec"><span class="k">Checklist</span>
       <div class="chk" id="cChk"></div>
@@ -382,10 +390,15 @@ const cv=c=>"--bg-l:var(--"+c+"-bg);--fg-l:var(--"+c+")";
 function cardsFor(k){
   if(k===INBOX) return S.cards.filter(c=>!c.repeat && !c.date).sort((a,b)=>(a.pos||0)-(b.pos||0));
   const wd=wdOf(k);
-  return S.cards.filter(c=>c.repeat? (c.wd===wd && (!c.from||k>=c.from) && !(c.skip||[]).includes(k)) : c.date===k);
+  return S.cards.filter(c=>c.repeat? (wdsOf(c).includes(wd) && (!c.from||k>=c.from) && !(c.skip||[]).includes(k)) : c.date===k);
 }
 const visible=c=>!S.hidden.length || !c.labels.length || c.labels.some(l=>!S.hidden.includes(l));
 const isDone=(c,k)=>(c.done||[]).includes(k);
+const wdsOf=c=>Array.isArray(c.wds)&&c.wds.length? c.wds : (c.wd!=null?[c.wd]:[]);
+const DAYS1=["L","M","M","J","V","S","D"];
+const hm24=m=>m>=1440?"24:00":hm(m);
+/* déplace une carte répétée d'un jour de la semaine à un autre */
+function swapWd(c,fromK,toK){ const w=wdsOf(c).filter(x=>x!==wdOf(fromK)); if(!w.includes(wdOf(toK))) w.push(wdOf(toK)); c.wds=w.sort((a,b)=>a-b); c.wd=null; }
 
 /* Place les cartes qui se chevauchent côte à côte */
 function lanes(list){
@@ -440,7 +453,7 @@ function cardEl(c,k,{top,h,ln}){
   const C=el("div",{class:"card"+(short?" short":"")+(done?" done":"")+(live?" live":""),role:"button",tabindex:"0","data-id":c.id,"data-k":k,
     style:cv(colorOf(c))+";top:"+(top+1)+"px;height:"+h+"px;left:calc("+(ln.i/ln.n*100)+"% + 3px);width:calc("+(100/ln.n)+"% - 6px);--lines:"+Math.max(1,Math.floor((h-20)/16)),
     "aria-label":c.title+", "+hm(c.start)+" à "+hm(c.start+(c.dur||30))});
-  const m=el("span",{class:"m num"},hm(c.start)+(short?"":"–"+hm(c.start+(c.dur||30))));
+  const m=el("span",{class:"m num"},hm(c.start)+(short?"":"–"+hm24(c.start+(c.dur||30))));
   if(c.labels.length>1){ const dt=el("span",{class:"dots"}); c.labels.slice(1).map(catOf).filter(Boolean).forEach(l=>dt.append(el("i",{style:"--c:var(--"+l.color+")"}))); m.append(dt); }
   if(c.alert>=0) m.insertAdjacentHTML("beforeend",I.bell);
   if(c.repeat) m.insertAdjacentHTML("beforeend",I.loop);
@@ -538,9 +551,9 @@ function endDrag(){
   d.fly.remove(); d.C.classList.remove("dragsrc");
   const t=d.target, c=d.c;
   if(t){
-    if(t.k===INBOX){ if(c.repeat) toast("Carte retirée de la routine"); c.repeat=false; c.wd=null; c.date=null; c.start=null; c.pos=Date.now(); }
+    if(t.k===INBOX){ if(c.repeat) toast("Carte retirée de la routine"); c.repeat=false; c.wd=null; c.wds=[]; c.date=null; c.start=null; c.pos=Date.now(); }
     else {
-      if(c.repeat) c.wd=wdOf(t.k); else c.date=t.k;
+      if(c.repeat){ if(d.k!==t.k) swapWd(c,d.k,t.k); } else c.date=t.k;
       c.start=t.start; if(t.start!=null && !c.dur) c.dur=60;
       if(t.start!=null && c.alert<0 && d.k===INBOX) c.alert=S.defAlert;
       if(d.k!==t.k && d.k!==INBOX && isDone(c,d.k)) c.done=c.done.filter(x=>x!==d.k);
@@ -567,7 +580,6 @@ let cur=null, curK=null, isNew=false;
 function fillStatic(){
   const st=$("#cStart"); st.replaceChildren(el("option",{value:""},"Sans heure"));
   for(let m=S.from*60;m<S.to*60;m+=SNAP) st.append(el("option",{value:m},hm(m)));
-  $("#cDur").replaceChildren(...[15,30,45,60,90,120,150,180,240,300,360,480].map(m=>el("option",{value:m},durTxt(m))));
   [$("#cAlert"),$("#sDefAlert")].forEach(s=>s.replaceChildren(...ALERTS.map(([v,l])=>el("option",{value:v},l))));
   [$("#sFrom"),$("#sTo")].forEach((s,j)=>{ s.replaceChildren(); for(let h=j?1:0;h<=(j?24:23);h++) s.append(el("option",{value:h},h+"h")); });
 }
@@ -579,7 +591,7 @@ function openCard(c,k){ cur=c; curK=k; drawCard(); $("#cardScrim").hidden=false;
 function drawCard(){
   const c=cur, k=curK;
   $("#cTitle").value=c.title;
-  $("#cWhere").textContent= k===INBOX? "Dans « À caser »" : DAYS[wdOf(k)]+" "+parseKey(k).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+(c.start!=null?" · "+hm(c.start)+"–"+hm(c.start+(c.dur||60)):" · sans heure");
+  $("#cWhere").textContent= k===INBOX? "Dans « À caser »" : DAYS[wdOf(k)]+" "+parseKey(k).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+(c.start!=null?" · "+hm(c.start)+"–"+hm24(c.start+(c.dur||60)):" · sans heure");
   $("#cLabs").replaceChildren(...S.cats.map(cat=>el("button",{type:"button",class:"lab",style:cv(cat.color),"aria-pressed":String(c.labels.includes(cat.id)),
     onclick:()=>{ c.labels=c.labels.includes(cat.id)? c.labels.filter(x=>x!==cat.id) : [...c.labels,cat.id]; save(); drawCard(); render(); }},cat.name)),
     el("button",{type:"button",class:"lab edit",onclick:openCats},"Modifier"));
@@ -590,10 +602,12 @@ function drawCard(){
   const st=$("#cStart"), sv=c.start!=null?String(c.start):"";
   if(sv && ![...st.options].some(o=>o.value===sv)) st.append(el("option",{value:sv},hm(+sv)));
   st.value=sv; st.disabled=k===INBOX;
-  $("#cDur").value=String(c.dur||60); $("#cDur").disabled=c.start==null;
+  drawEnd();
   $("#cAlert").value=String(c.alert); $("#cAlert").disabled=c.start==null;
-  $("#cRepeat").checked=!!c.repeat; $("#cRepeat").disabled=k===INBOX;
-  $("#cRepTxt").textContent= k===INBOX? "Choisis d'abord un jour." : "La carte revient tous les "+DAYS[wdOf(k)].toLowerCase()+"s.";
+  const W=c.repeat? wdsOf(c) : [];
+  $("#cWds").replaceChildren(...DAYS1.map((l,i)=>el("button",{type:"button","aria-pressed":String(W.includes(i)),"aria-label":DAYS[i],disabled:k===INBOX,onclick:()=>toggleWd(i)},l)));
+  $("#cWeekdays").disabled=k===INBOX; $("#cNoRep").hidden=!c.repeat;
+  $("#cRepTxt").textContent= k===INBOX? "Choisis d'abord un jour." : c.repeat? "Revient chaque semaine le "+W.map(i=>DAYS[i].toLowerCase()).join(", ").replace(/, ([^,]*)$/," et $1")+"." : "Touche les jours où cette carte doit revenir chaque semaine.";
   if(document.activeElement!==$("#cDesc")) $("#cDesc").value=c.desc||"";
   drawChk();
   $("#cDoneRow").hidden=k===INBOX; $("#cDone").checked=isDone(c,k);
@@ -610,8 +624,8 @@ function drawChk(){
 }
 function moveTo(day){
   const c=cur;
-  if(day===INBOX){ c.date=null; c.repeat=false; c.wd=null; c.start=null; }
-  else if(c.repeat) c.wd=wdOf(day); else c.date=day;
+  if(day===INBOX){ c.date=null; c.repeat=false; c.wd=null; c.wds=[]; c.start=null; }
+  else if(c.repeat){ if(curK!==INBOX) swapWd(c,curK,day); } else c.date=day;
   curK=day; if(day!==INBOX && !c.repeat && mondayOf(day)!==week) week=mondayOf(day);
   save(); drawCard(); render();
 }
@@ -620,13 +634,33 @@ $("#cTitle").addEventListener("input",e=>{ grow(e.target); cur.title=e.target.va
 $("#cTitle").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } });
 $("#cDay").addEventListener("change",e=>moveTo(e.target.value));
 $("#cDate").addEventListener("change",e=>{ if(e.target.value) moveTo(e.target.value); });
-$("#cStart").addEventListener("change",e=>{ const v=e.target.value; cur.start=v===""?null:+v; if(cur.start!=null && cur.alert<0) cur.alert=S.defAlert; fired.delete(cur.id+"@"+curK); save(); drawCard(); render(); });
-$("#cDur").addEventListener("change",e=>{ cur.dur=+e.target.value; save(); drawCard(); render(); });
+$("#cStart").addEventListener("change",e=>{ const v=e.target.value; cur.start=v===""?null:+v; if(cur.start!=null){ if(cur.alert<0) cur.alert=S.defAlert; cur.dur=Math.max(SNAP,Math.min(cur.dur||60,S.to*60-cur.start)); } fired.delete(cur.id+"@"+curK); save(); drawCard(); render(); });
+$("#cEnd").addEventListener("change",e=>{ cur.dur=+e.target.value-cur.start; save(); drawCard(); render(); });
+function drawEnd(){
+  const c=cur, sel=$("#cEnd");
+  if(c.start==null){ sel.replaceChildren(el("option",{value:""},"—")); sel.disabled=true; return; }
+  sel.disabled=false;
+  const end=Math.min(c.start+(c.dur||60),S.to*60), opts=[];
+  for(let m=c.start+SNAP;m<=Math.max(S.to*60,end);m+=SNAP) opts.push(el("option",{value:m},hm24(m)+"  ("+durTxt(m-c.start)+")"));
+  sel.replaceChildren(...opts); sel.value=String(end);
+}
+function toggleWd(i){
+  const c=cur, k=curK; if(k===INBOX) return;
+  let W=c.repeat? wdsOf(c).slice() : [wdOf(k)];
+  if(c.repeat && W.includes(i)) W=W.filter(x=>x!==i); else if(!W.includes(i)) W.push(i);
+  setWds(W);
+}
+function setWds(W){
+  const c=cur, k=curK;
+  if(!W.length){ c.repeat=false; c.wds=[]; c.wd=null; c.date=k; save(); drawCard(); render(); return; }
+  if(!c.repeat){ c.from=mondayOf(k); c.done=[]; }
+  c.repeat=true; c.wds=W.sort((a,b)=>a-b); c.wd=null; c.date=null;
+  if(!W.includes(wdOf(k))) curK=addDays(mondayOf(k),W[0]);
+  save(); drawCard(); render();
+}
+$("#cWeekdays").onclick=()=>setWds([0,1,2,3,4]);
+$("#cNoRep").onclick=()=>setWds([]);
 $("#cAlert").addEventListener("change",e=>{ cur.alert=+e.target.value; fired.delete(cur.id+"@"+curK); save(); render(); });
-$("#cRepeat").addEventListener("change",e=>{ const c=cur;
-  if(e.target.checked){ c.repeat=true; c.wd=wdOf(curK); c.from=curK; c.date=null; toast("La carte revient chaque "+DAYS[c.wd].toLowerCase()); }
-  else { c.repeat=false; c.date=curK; c.wd=null; }
-  save(); drawCard(); render(); });
 $("#cDesc").addEventListener("input",e=>{ cur.desc=e.target.value; save(); });
 $("#cChkForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("#cChkIn").value.trim(); if(!v) return;
   (cur.checklist||(cur.checklist=[])).push({id:uid(),t:v,done:false}); $("#cChkIn").value=""; save(); drawChk(); render(); });
