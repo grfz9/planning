@@ -1,7 +1,7 @@
 // Comptes et synchronisation (facultatif).
-// Colle ici l'URL et la clé « anon » de ton projet Supabase (voir SYNCHRO.md).
+// URL et clé publique (publishable / anon) du projet Supabase (voir SYNCHRO.md).
 // Ces deux valeurs sont publiques : la sécurité vient des règles posées par supabase.sql.
 window.PLANNING_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: ""
+  supabaseUrl: "https://gyqboknfaxokhmybjxwp.supabase.co",
+  supabaseAnonKey: "sb_publishable_Oyp-hRyK0UA2wwhPhAExWA_1ifLHyt-"
 };
