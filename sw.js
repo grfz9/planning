@@ -1,5 +1,5 @@
 // Garde le planning disponible hors connexion et affiche les notifications.
-const CACHE = "planning-v2";
+const CACHE = "planning-v3";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
