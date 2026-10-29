@@ -370,6 +370,15 @@ body.painting .mdays{touch-action:none}
 .ftab tr.cur-m th{color:var(--accent)}
 .ftab tfoot td,.ftab tfoot th{font-weight:800;border-bottom:0;font-variant-numeric:tabular-nums;text-align:right}
 .ftab tfoot th{text-align:center}
+/* Tuto */
+.tuto{max-width:480px;text-align:center;align-items:center}
+.tuto .ill{width:84px;height:84px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-hand);font-size:44px;font-weight:700}
+.tuto h2{font-size:34px}
+.tuto p{margin:0;color:var(--muted);font-size:15px;max-width:42ch;line-height:1.5}
+.tuto .dots{display:flex;gap:6px}
+.tuto .dots i{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.tuto .dots i.on{background:var(--accent);width:22px;border-radius:4px}
+.tuto .foot{width:100%}
 /* Compte */
 #acctBtn{position:relative}
 #acctBtn .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 2px var(--panel)}
@@ -491,6 +500,17 @@ body.painting .mdays{touch-action:none}
 
 <div class="lightbox" id="lightbox" hidden><img alt="Image de vision en grand"></div>
 
+<!-- Tuto -->
+<div class="scrim" id="tutoScrim" hidden>
+  <div class="sheet tuto" role="dialog" aria-labelledby="tutoH" aria-live="polite">
+    <div class="ill" id="tutoIll"></div>
+    <h2 id="tutoH"></h2>
+    <p id="tutoP"></p>
+    <div class="dots" id="tutoDots"></div>
+    <div class="foot"><button class="btn ghost" id="tutoSkip">Passer</button><div class="r"><button class="btn" id="tutoBack">Retour</button><button class="btn main" id="tutoNext">Suivant</button></div></div>
+  </div>
+</div>
+
 <!-- Compte -->
 <div class="scrim" id="acctScrim" hidden>
   <div class="sheet" role="dialog" aria-labelledby="acctH">
@@ -566,6 +586,7 @@ body.painting .mdays{touch-action:none}
       <p class="note">Ajoute la semaine au Calendrier de l'iPhone : chaque carte avec une heure garde son rappel, même écran verrouillé.</p>
       <button class="btn" id="sIcs" style="align-self:flex-start">Ajouter la semaine au Calendrier (.ics)</button>
     </div>
+    <div class="sec"><span class="k">Aide</span><button class="btn" id="sTuto" style="align-self:flex-start">Revoir le tuto</button></div>
     <div class="sec"><span class="k">Installer sur l'iPhone</span>
       <ol class="steps"><li>Ouvre ce lien dans Safari.</li><li>Touche Partager, puis <b>Sur l'écran d'accueil</b>.</li><li>Ouvre Planning depuis l'icône : il s'affiche en plein écran et marche hors connexion.</li></ol>
     </div>
@@ -1377,6 +1398,7 @@ async function cloudInit(){
   else if(lastUser){ /* session expirée : on revient au mode sans compte sans rien effacer */
     localStorage.removeItem("planning.lastUser"); STORE_KEY=STORE; S=normalize(load()); warInit(); refresh(); toast("Reconnecte-toi pour synchroniser ton planning"); }
   setAcct();
+  if(!cloudUser && localStorage.getItem("planning.tuto")) askLogin(false);
   setInterval(()=>{ if(!document.hidden) cloudCheck(); },60000);
 }
 const hasContent=v=>v&&( (v.cards&&v.cards.length) || (v.mind&&(v.mind.why||v.mind.images&&v.mind.images.length)) || (v.war&&Object.keys(v.war.days||{}).length) );
@@ -1467,7 +1489,7 @@ function openAcct(mode){
     if(signup && !r.data.session){ B.replaceChildren(el("p",{class:"note"},"Compte créé. Ouvre l'e-mail envoyé à "+email+" et clique sur le lien pour confirmer, puis reviens te connecter ici.")); return; }
     await signedIn(r.data.user,true); openAcct(); toast("Connecté");
   };
-  B.replaceChildren(el("p",{class:"note"},"Crée un compte pour retrouver ton planning sur ton PC et ton téléphone. Chaque compte a son propre planning, que personne d'autre ne voit."),
+  B.replaceChildren(el("p",{class:"note",style:"font-weight:600;color:var(--ink)"},"Connecte-toi pour ne rien perdre."),el("p",{class:"note"},"Crée un compte pour retrouver ton planning sur ton PC et ton téléphone. Chaque compte a son propre planning, que personne d'autre ne voit."),
     el("label",{class:"f"},el("span",null,"E-mail"),em), el("label",{class:"f"},el("span",null,"Mot de passe"),pw), msg,
     el("div",{class:"foot"},el("button",{class:"btn main",onclick:()=>go(false)},"Se connecter"),el("button",{class:"btn",onclick:()=>go(true)},"Créer un compte")),
     el("button",{class:"btn ghost",style:"align-self:flex-start",onclick:async()=>{ const email=em.value.trim(); if(!email){ msg.textContent="Entre d'abord ton e-mail."; return; }
@@ -1477,6 +1499,36 @@ function openAcct(mode){
 $("#acctBtn").onclick=()=>openAcct();
 $("#acctClose").onclick=()=>$("#acctScrim").hidden=true;
 
+
+/* ---------- Tuto de première visite + invitation à se connecter ---------- */
+const TUTO=[
+  ["👋","Bienvenue !","Ce planning t'aide à organiser ta semaine, ton année et tes objectifs. Voici l'essentiel en 1 minute."],
+  ["7j","La semaine","Les heures à gauche, un jour par colonne. Touche une case vide pour ajouter une carte, glisse-la pour la déplacer, tire son bas pour changer sa durée."],
+  ["🏷️","Étiquettes et rappels","Donne une couleur à chaque carte (Ads, Produit, Sport…), un rappel, et fais-la revenir chaque semaine sur les jours que tu veux."],
+  ["12","L'année","Dans « Année », choisis une période (Vacances, Lancement, Q4…) et colorie les jours. Note 3 objectifs par mois."],
+  ["✨","Vision, habitudes, routine, finances","Écris ton Why et ta vision avec des images, suis tes habitudes jour par jour, coche ta routine et suis tes objectifs d'argent."],
+  ["📱","Sur ton téléphone","Dans Safari : Partager → « Sur l'écran d'accueil ». Le planning s'ouvre comme une appli."],
+  ["🔒","Ton compte","Crée un compte pour retrouver ton planning sur PC et téléphone. Il est privé : personne d'autre n'y a accès."]
+];
+let tutoI=0;
+function drawTuto(){
+  const [ill,h,p]=TUTO[tutoI], last=tutoI===TUTO.length-1;
+  $("#tutoIll").textContent=ill; $("#tutoH").textContent=h; $("#tutoP").textContent=p;
+  $("#tutoDots").replaceChildren(...TUTO.map((_,i)=>el("i",{class:i===tutoI?"on":""})));
+  $("#tutoBack").hidden=tutoI===0;
+  $("#tutoNext").textContent= last? (CLOUD&&!cloudUser? "Créer mon compte" : "C'est parti") : "Suivant";
+}
+function openTuto(){ tutoI=0; drawTuto(); $("#tutoScrim").hidden=false; }
+function endTuto(){ $("#tutoScrim").hidden=true; try{ localStorage.setItem("planning.tuto","1"); }catch(e){} if(CLOUD&&!cloudUser) askLogin(true); }
+$("#tutoNext").onclick=()=>{ if(tutoI<TUTO.length-1){ tutoI++; drawTuto(); } else endTuto(); };
+$("#tutoBack").onclick=()=>{ if(tutoI>0){ tutoI--; drawTuto(); } };
+$("#tutoSkip").onclick=endTuto;
+$("#sTuto").onclick=()=>{ $("#setScrim").hidden=true; openTuto(); };
+function askLogin(force){
+  if(!CLOUD||cloudUser) return;
+  if(!force){ try{ if(sessionStorage.getItem("planning.asked")) return; sessionStorage.setItem("planning.asked","1"); }catch(e){} }
+  openAcct();
+}
 /* ---------- Navigation & démarrage ---------- */
 function scrollToNow(){
   const B=$("#board"), H=Hpx(), tk=todayKey();
@@ -1500,7 +1552,8 @@ window.addEventListener("storage",e=>{ if(e.key===STORE_KEY&&!cur){ const v=load
 warInit(); fillStatic(); render(); requestAnimationFrame(scrollToNow); tick();
 setView(location.hash.slice(1)||"semaine");
 cloudInit();
-if(!S.cards.length && view==="semaine") setTimeout(()=>toast("Touche une case vide pour ajouter une carte à cette heure"),600);
+if(!localStorage.getItem("planning.tuto") && !location.hash.includes("=")) setTimeout(openTuto,300);
+else if(!S.cards.length && view==="semaine") setTimeout(()=>toast("Touche une case vide pour ajouter une carte à cette heure"),600);
 if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
 </script>
