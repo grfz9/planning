@@ -15,6 +15,16 @@ Un planning de la semaine en grille : les heures à gauche (8h → 24h), une col
 - **Couleur d'accent** et **heures affichées** au choix dans les Réglages. Mode sombre automatique.
 - **Installable sur l'iPhone** : Safari → Partager → « Sur l'écran d'accueil ».
 
+## Vue Année (war map)
+
+Bouton **Année** en haut : les 12 mois rangés par trimestre, semaine par semaine.
+
+- Choisis une période dans la légende (Vacances, Lancement, Q4…), puis touche ou glisse sur les jours pour les colorier. **Gomme** pour effacer.
+- Renomme les périodes, change leur couleur (touche le nombre de jours à droite), ajoutes-en.
+- 3 objectifs à cocher sous chaque mois.
+- Listes à cocher à droite : Business goals, Voyage / vacances, Possession, Santé, ou les tiennes.
+- Touche un jour (sans pinceau actif) pour ouvrir sa semaine. La période du jour s'affiche aussi dans la vue Semaine.
+
 ## Où sont mes données ?
 
 Dans le navigateur de l'appareil (localStorage). Rien n'est envoyé sur internet.
