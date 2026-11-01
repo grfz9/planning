@@ -37,6 +37,10 @@ Bouton **Année** en haut : les 12 mois rangés par trimestre, semaine par semai
 Chacun peut créer son compte (bouton **Compte**) et retrouver **son** planning sur PC et téléphone, sans que personne d'autre n'y ait accès.
 Il faut d'abord brancher un projet Supabase gratuit : voir **[SYNCHRO.md](SYNCHRO.md)** (5 minutes).
 
+## Notifications iPhone
+
+Tes rappels arrivent même planning fermé : voir **[NOTIFICATIONS.md](NOTIFICATIONS.md)**.
+
 ## Où sont mes données ?
 
 Sans compte : dans le navigateur de l'appareil. Rien n'est envoyé sur internet.
@@ -50,4 +54,5 @@ Tu peux toujours exporter une sauvegarde depuis les Réglages.
 - `sw.js` : fonctionnement hors connexion et notifications.
 - `config.js` : adresse et clé publique de ton projet Supabase (vide = sans compte).
 - `supabase.sql` : table et règles de sécurité à créer dans Supabase.
+- `notifications.sql`, `scripts/send-push.mjs`, `.github/workflows/notifications.yml` : envoi des notifications.
 - `vendor/supabase.js` : client Supabase 2.45.4 (licence MIT, voir `vendor/LICENSE-supabase`).

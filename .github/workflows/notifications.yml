@@ -1,0 +1,27 @@
+name: Notifications iPhone
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: notifications
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save web-push@3.6.7
+      - run: node scripts/send-push.mjs
+        env:
+          SUPABASE_URL: https://gyqboknfaxokhmybjxwp.supabase.co
+          VAPID_PUBLIC_KEY: BEuqs3DJ0tvHqx4Nq8Ay4wnoJ5pEBLjkwUczPBVBJZAqfVkn5FKBzJqOvC_-yXmWfItCk7imqTofyPHuF2eq4Go
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}

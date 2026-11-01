@@ -492,6 +492,10 @@ body.v-aujourdhui #p-aujourdhui{display:block}
   .hdots i[data-v="1"]{background:#3FB37F}.hdots i[data-v="0.5"]{background:#F4C76B}.hdots i[data-v="0"]{background:#F07C7C}
   .hdots i.cur{outline:2px solid var(--ink);outline-offset:1px}
 }
+.news-v{margin:0 0 6px;font-weight:800;font-size:15px;display:flex;justify-content:space-between;gap:8px}
+.news-v small{color:var(--muted);font-weight:600}
+.news-l{margin:0 0 14px;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:14.5px}
+.news-new{background:var(--accent);color:#fff;border-radius:6px;padding:0 6px;font-size:11px;font-weight:800;margin-left:6px;vertical-align:2px}
 /* Tuto */
 .tuto{max-width:480px;text-align:center;align-items:center}
 .tuto .ill{width:84px;height:84px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-hand);font-size:44px;font-weight:700}
@@ -644,6 +648,15 @@ body.v-aujourdhui #p-aujourdhui{display:block}
   </div>
 </div>
 
+<!-- Nouveautés -->
+<div class="scrim" id="newsScrim" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="newsH">
+    <h2 id="newsH">Nouveautés</h2>
+    <div id="newsBody"></div>
+    <div class="foot"><div class="r"><button class="btn main" id="newsOk">Compris</button></div></div>
+  </div>
+</div>
+
 <!-- Compte -->
 <div class="scrim" id="acctScrim" hidden>
   <div class="sheet" role="dialog" aria-labelledby="acctH">
@@ -715,7 +728,11 @@ body.v-aujourdhui #p-aujourdhui{display:block}
       </div>
       <div class="foot"><button class="btn" id="sNotif">Autoriser les notifications</button><span class="note" id="sNotifTxt"></span></div>
     </div>
-    <div class="sec"><span class="k">Rappels même appli fermée (iPhone)</span>
+    <div class="sec"><span class="k">Notifications sur l'iPhone</span>
+      <p class="note">Reçois tes rappels comme une vraie appli, même planning fermé. Il faut être connecté à ton compte et avoir installé le planning sur l'écran d'accueil.</p>
+      <div class="foot"><button class="btn main" id="sPush">Activer les notifications</button><span class="note" id="sPushTxt"></span></div>
+    </div>
+    <div class="sec"><span class="k">Rappels via le Calendrier (sans compte)</span>
       <p class="note">Ajoute la semaine au Calendrier de l'iPhone : chaque carte avec une heure garde son rappel, même écran verrouillé.</p>
       <button class="btn" id="sIcs" style="align-self:flex-start">Ajouter la semaine au Calendrier (.ics)</button>
     </div>
@@ -746,6 +763,7 @@ body.v-aujourdhui #p-aujourdhui{display:block}
       <button data-act="inbox"><span>À caser</span><small id="moreInbox"></small></button>
       <button data-act="acct"><span>Mon compte</span><small id="moreAcct"></small></button>
       <button data-act="set"><span>Réglages</span><small>Couleur, rappels, sauvegarde</small></button>
+      <button data-act="news"><span>Nouveautés</span><small id="moreNews"></small></button>
       <button data-act="tuto"><span>Revoir le tuto</span><small></small></button>
     </div>
     <button class="btn" id="moreClose">Fermer</button>
@@ -1186,6 +1204,7 @@ $("#sTo").onchange=e=>{ const v=+e.target.value; if(v<=S.from){ toast("L'heure d
 $("#sSound").onchange=e=>{ S.sound=e.target.checked; save(); if(S.sound){ unlock(); chime(); } };
 $("#sDefAlert").onchange=e=>{ S.defAlert=+e.target.value; save(); };
 $("#sNotif").onclick=async()=>{ try{ await Notification.requestPermission(); }catch(e){} notifStatus(); };
+const _openSet=openSet; openSet=function(){ _openSet(); pushStatus(); };
 $("#sTest").onclick=()=>{ unlock(); fire({title:"Lancer les nouvelles pubs TikTok",when:"Test · dans 10 min · 15:00"}); };
 function download(name,text,type){
   const a=el("a",{href:URL.createObjectURL(new Blob([text],{type})),download:name});
@@ -1609,7 +1628,7 @@ async function cloudPull(){
 async function cloudPush(){
   if(!sb||!cloudUser) return; pushing=true; cloudState="sync"; setAcct();
   try{ const {error}=await sb.from("planners").upsert({user_id:cloudUser.id,data:S,updated_at:new Date(S.updatedAt||Date.now()).toISOString()});
-    if(error) throw error; cloudState="ok"; lastSync=Date.now(); cloudErr=""; dirtySince=0; clearTimeout(pushT); pushT=null; const P=$("#syncPill"); if(P&&!P.hidden&&!P.classList.contains("ok")&&P.textContent.startsWith("Modif")) P.hidden=true; }
+    if(error) throw error; cloudState="ok"; lastSync=Date.now(); cloudErr=""; dirtySince=0; syncJobsSoon(); clearTimeout(pushT); pushT=null; const P=$("#syncPill"); if(P&&!P.hidden&&!P.classList.contains("ok")&&P.textContent.startsWith("Modif")) P.hidden=true; }
   catch(e){ cloudState="err"; cloudErr="Synchronisation impossible : "+(e.message||"erreur réseau")+". Tes changements restent sur cet appareil et repartiront au prochain essai."; }
   pushing=false; setAcct();
 }
@@ -1755,7 +1774,7 @@ function syncMobileNav(){
   if(view==="semaine") drawStrip();
 }
 document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=()=>{
-  if(b.dataset.v==="plus"){ $("#moreInbox").textContent=cardsFor(INBOX).length+" carte(s)"; $("#moreAcct").textContent=cloudUser?cloudUser.email:(CLOUD?"Non connecté":"Sur cet appareil"); $("#moreScrim").hidden=false; return; }
+  if(b.dataset.v==="plus"){ $("#moreInbox").textContent=cardsFor(INBOX).length+" carte(s)"; $("#moreNews").textContent="Version "+NEWS_V; $("#moreAcct").textContent=cloudUser?cloudUser.email:(CLOUD?"Non connecté":"Sur cet appareil"); $("#moreScrim").hidden=false; return; }
   if(b.dataset.v===view){ document.querySelector(view==="semaine"?"#board":view==="annee"?"#war":"#p-"+view)?.scrollTo({top:0,behavior:"smooth"}); if(view==="semaine") scrollToNow(); return; }
   setView(b.dataset.v); window.scrollTo(0,0);
 });
@@ -1763,7 +1782,7 @@ let warScrolled=false;
 function warToMonth(){ if(warScrolled||W().year!==new Date().getFullYear()) return; warScrolled=true; const m=$("#m-"+new Date().getMonth()), w=$("#war"); if(m&&w) w.scrollTop=m.getBoundingClientRect().top-w.getBoundingClientRect().top+w.scrollTop-60; }
 document.querySelectorAll("#moreScrim [data-go]").forEach(b=>b.onclick=()=>{ $("#moreScrim").hidden=true; setView(b.dataset.go); });
 document.querySelectorAll("#moreScrim [data-act]").forEach(b=>b.onclick=()=>{ $("#moreScrim").hidden=true; const a=b.dataset.act;
-  if(a==="inbox"){ setView("semaine"); $("#inbox").classList.add("open"); } else if(a==="acct") openAcct(); else if(a==="set") openSet(); else openTuto(); });
+  if(a==="news"){ openNews(true); } else if(a==="inbox"){ setView("semaine"); $("#inbox").classList.add("open"); } else if(a==="acct") openAcct(); else if(a==="set") openSet(); else openTuto(); });
 $("#moreClose").onclick=()=>$("#moreScrim").hidden=true;
 $("#moreScrim").addEventListener("click",e=>{ if(e.target.id==="moreScrim") $("#moreScrim").hidden=true; });
 /* bande des jours (iPhone) : un jour par écran */
@@ -1792,6 +1811,68 @@ $("#fab").onclick=()=>{
       render(); } },{passive:true});
 })();
 window.addEventListener("resize",()=>{ if(view==="semaine") render(); });
+
+/* ---------- Nouveautés (patch notes) ---------- */
+const NEWS=[
+  {v:"1.9",d:"1er nov. 2026",items:["Notifications sur l'iPhone : tes rappels arrivent même planning fermé (Réglages → Notifications sur l'iPhone).","Nouveautés : cette fenêtre te présente chaque mise à jour."]},
+  {v:"1.8",d:"1er nov. 2026",items:["Synchronisation automatique environ 1 s après chaque changement.","Semaine sur téléphone : un jour à la fois, glisse pour changer de jour.","Habitudes sur téléphone : boutons Fait / À moitié / Pas fait et aperçu du mois."]},
+  {v:"1.7",d:"1er nov. 2026",items:["Mobile façon iPhone : barre d'onglets en bas, grand titre, menu Plus, bouton +."]},
+  {v:"1.6",d:"29 oct. 2026",items:["Page Aujourd'hui : ta journée, ton CA du mois, tes habitudes et le compte à rebours.","Objectifs datés dans l'année (★).","Tuto de première visite."]},
+  {v:"1.5",d:"29 oct. 2026",items:["Comptes privés synchronisés entre PC et téléphone.","Pages Vision, Habitudes, Routine et Finances."]},
+  {v:"1.4",d:"29 oct. 2026",items:["Vue Année (war map) avec périodes colorées et objectifs du mois."]}
+];
+const NEWS_V=NEWS[0].v;
+function openNews(all){
+  const seen=localStorage.getItem("planning.news")||"0";
+  const list=all? NEWS : NEWS.filter(n=>n.v>seen);
+  $("#newsBody").replaceChildren(...list.flatMap(n=>[el("p",{class:"news-v"},el("span",null,"Version "+n.v,n.v>seen?el("span",{class:"news-new"},"NOUVEAU"):""),el("small",null,n.d)),
+    el("ul",{class:"news-l"},...n.items.map(t=>el("li",null,t)))]));
+  $("#newsScrim").hidden=false;
+}
+function closeNews(){ $("#newsScrim").hidden=true; try{ localStorage.setItem("planning.news",NEWS_V); }catch(e){} if(sb&&!cloudUser) askLogin(false); }
+$("#newsOk").onclick=closeNews;
+$("#newsScrim").addEventListener("click",e=>{ if(e.target.id==="newsScrim") closeNews(); });
+
+/* ---------- Notifications push (iPhone en appli d'écran d'accueil, ou ordinateur) ---------- */
+const b64u=s=>{ const p="=".repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(b,c=>c.charCodeAt(0)); };
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent), standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+function pushStatus(){
+  const t=$("#sPushTxt"), b=$("#sPush");
+  if(!CFG.vapidPublicKey){ b.hidden=true; t.textContent="Les notifications ne sont pas configurées."; return; }
+  if(isIOS&&!standalone){ b.hidden=true; t.textContent="D'abord : Safari → Partager → « Sur l'écran d'accueil », puis ouvre le planning depuis l'icône."; return; }
+  if(!("PushManager" in window)||!("serviceWorker" in navigator)){ b.hidden=true; t.textContent="Ce navigateur ne gère pas les notifications."; return; }
+  if(!cloudUser){ b.hidden=false; b.textContent="Se connecter d'abord"; t.textContent="Les notifications sont liées à ton compte."; return; }
+  b.textContent="Activer les notifications";
+  if(Notification.permission==="denied"){ b.hidden=true; t.textContent="Notifications refusées : Réglages de l'iPhone → Planning → Notifications."; return; }
+  b.hidden=localStorage.getItem("planning.push")==="1"&&Notification.permission==="granted";
+  t.textContent=b.hidden? "✓ Notifications activées sur cet appareil." : "";
+}
+async function enablePush(){
+  if(!cloudUser){ $("#setScrim").hidden=true; openAcct(); return; }
+  try{
+    const perm=await Notification.requestPermission(); if(perm!=="granted"){ pushStatus(); return; }
+    const reg=await navigator.serviceWorker.ready;
+    const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(CFG.vapidPublicKey)});
+    const j=sub.toJSON();
+    const {error}=await sb.from("push_subs").upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,user_id:cloudUser.id});
+    if(error) throw error;
+    localStorage.setItem("planning.push","1"); await syncJobs(); pushStatus(); toast("Notifications activées");
+  }catch(e){ $("#sPushTxt").textContent="Activation impossible : "+(e.message||e); }
+}
+$("#sPush").onclick=enablePush;
+/* envoie au serveur les rappels des 7 prochains jours */
+let jobsT=null, lastJobs="";
+async function syncJobs(){
+  if(!sb||!cloudUser||localStorage.getItem("planning.push")!=="1") return;
+  const jobs=[], now=Date.now();
+  for(let i=0;i<8;i++){ const k=addDays(todayKey(),i), base=parseKey(k).getTime();
+    cardsFor(k).forEach(c=>{ if(c.start==null||c.alert<0||!c.title||isDone(c,k)) return;
+      const at=base+(c.start-c.alert)*60000; if(at<now-60000) return;
+      jobs.push({id:c.id+"@"+k,fire_at:new Date(at).toISOString(),title:c.title,body:(c.alert?"Dans "+c.alert+" min · ":"Maintenant · ")+hm(c.start)}); }); }
+  const sig=JSON.stringify(jobs); if(sig===lastJobs) return;
+  const {error}=await sb.rpc("replace_my_jobs",{jobs}); if(!error) lastJobs=sig;
+}
+function syncJobsSoon(){ clearTimeout(jobsT); jobsT=setTimeout(syncJobs,1500); }
 /* ---------- Tuto de première visite + invitation à se connecter ---------- */
 const TUTO=[
   ["👋","Bienvenue !","Ce planning t'aide à organiser ta semaine, ton année et tes objectifs. Voici l'essentiel en 1 minute."],
@@ -1818,6 +1899,7 @@ $("#tutoSkip").onclick=endTuto;
 $("#sTuto").onclick=()=>{ $("#setScrim").hidden=true; openTuto(); };
 function askLogin(force){
   if(!CLOUD||cloudUser) return;
+  if(!force && !$("#newsScrim").hidden) return;
   if(!force){ try{ if(sessionStorage.getItem("planning.asked")) return; sessionStorage.setItem("planning.asked","1"); }catch(e){} }
   openAcct();
 }
@@ -1845,7 +1927,8 @@ window.addEventListener("storage",e=>{ if(e.key===STORE_KEY&&!cur){ const v=load
 warInit(); fillStatic(); render(); requestAnimationFrame(scrollToNow); tick();
 setView(location.hash.slice(1)||"aujourdhui");
 cloudInit();
-if(!localStorage.getItem("planning.tuto") && !location.hash.includes("=")) setTimeout(openTuto,300);
+if(!localStorage.getItem("planning.tuto") && !location.hash.includes("=")){ setTimeout(openTuto,300); try{ localStorage.setItem("planning.news",NEWS_V); }catch(e){} }
+else if((localStorage.getItem("planning.news")||"0")<NEWS_V) setTimeout(()=>openNews(false),500);
 else if(!S.cards.length && view==="semaine") setTimeout(()=>toast(matchMedia("(max-width:700px)").matches?"Touche + ou une case vide pour ajouter une carte":"Touche une case vide pour ajouter une carte à cette heure"),600);
 if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();

@@ -1,5 +1,5 @@
 // Garde le planning disponible hors connexion et affiche les notifications.
-const CACHE = "planning-v12";
+const CACHE = "planning-v13";
 const FILES = ["./", "index.html", "config.js", "vendor/supabase.js", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -20,6 +20,11 @@ self.addEventListener("fetch", e => {
       .then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r; })
       .catch(() => caches.match(e.request).then(r => r || caches.match("index.html")))
   );
+});
+
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Planning", { body: d.body || "", tag: d.tag, icon: "icon-512.png", badge: "icon-180.png" }));
 });
 
 self.addEventListener("notificationclick", e => {
