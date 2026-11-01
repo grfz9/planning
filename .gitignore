@@ -1,0 +1,3 @@
+# captures de test
+*.png
+!icon-*.png
