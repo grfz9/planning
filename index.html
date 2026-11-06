@@ -496,6 +496,20 @@ body.v-aujourdhui #p-aujourdhui{display:block}
 .news-v small{color:var(--muted);font-weight:600}
 .news-l{margin:0 0 14px;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:14.5px}
 .news-new{background:var(--accent);color:#fff;border-radius:6px;padding:0 6px;font-size:11px;font-weight:800;margin-left:6px;vertical-align:2px}
+.rev{display:flex;flex-direction:column;gap:14px}
+.rev .sub{margin:-8px 0 0;color:var(--muted);font-size:14px}
+.kpi4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi4 div{background:var(--col);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.kpi4 b{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi4 span{font-size:12.5px;color:var(--muted)}
+.rbar{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) 3.4rem;gap:8px;align-items:center;font-size:13.5px}
+.rbar i{display:block;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.rbar i u{display:block;height:100%;background:var(--fg-l,var(--accent))}
+.rbar em{font-style:normal;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.rev h3{margin:0;font-size:14px;font-weight:800}
+.rev .left{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.rev .left label{display:flex;gap:8px;align-items:center;min-height:36px}
+.rev textarea{width:100%;border:1px solid var(--line-2);background:var(--col);border-radius:10px;padding:8px 10px;font-size:16px;min-height:60px;resize:vertical}
 /* Tuto */
 .tuto{max-width:480px;text-align:center;align-items:center}
 .tuto .ill{width:84px;height:84px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-hand);font-size:44px;font-weight:700}
@@ -648,6 +662,15 @@ body.v-aujourdhui #p-aujourdhui{display:block}
   </div>
 </div>
 
+<!-- Résumé de la semaine -->
+<div class="scrim" id="revScrim" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="revH">
+    <h2 id="revH">Ta semaine</h2>
+    <div id="revBody" class="rev"></div>
+    <div class="foot"><div class="r"><button class="btn main" id="revOk">Terminer le bilan</button></div></div>
+  </div>
+</div>
+
 <!-- Nouveautés -->
 <div class="scrim" id="newsScrim" hidden>
   <div class="sheet" role="dialog" aria-labelledby="newsH">
@@ -763,6 +786,7 @@ body.v-aujourdhui #p-aujourdhui{display:block}
       <button data-act="inbox"><span>À caser</span><small id="moreInbox"></small></button>
       <button data-act="acct"><span>Mon compte</span><small id="moreAcct"></small></button>
       <button data-act="set"><span>Réglages</span><small>Couleur, rappels, sauvegarde</small></button>
+      <button data-act="review"><span>Bilan de la semaine</span><small>Semaine passée</small></button>
       <button data-act="news"><span>Nouveautés</span><small id="moreNews"></small></button>
       <button data-act="tuto"><span>Revoir le tuto</span><small></small></button>
     </div>
@@ -1782,7 +1806,7 @@ let warScrolled=false;
 function warToMonth(){ if(warScrolled||W().year!==new Date().getFullYear()) return; warScrolled=true; const m=$("#m-"+new Date().getMonth()), w=$("#war"); if(m&&w) w.scrollTop=m.getBoundingClientRect().top-w.getBoundingClientRect().top+w.scrollTop-60; }
 document.querySelectorAll("#moreScrim [data-go]").forEach(b=>b.onclick=()=>{ $("#moreScrim").hidden=true; setView(b.dataset.go); });
 document.querySelectorAll("#moreScrim [data-act]").forEach(b=>b.onclick=()=>{ $("#moreScrim").hidden=true; const a=b.dataset.act;
-  if(a==="news"){ openNews(true); } else if(a==="inbox"){ setView("semaine"); $("#inbox").classList.add("open"); } else if(a==="acct") openAcct(); else if(a==="set") openSet(); else openTuto(); });
+  if(a==="review"){ openReview(addDays(mondayOf(todayKey()),-7)); } else if(a==="news"){ openNews(true); } else if(a==="inbox"){ setView("semaine"); $("#inbox").classList.add("open"); } else if(a==="acct") openAcct(); else if(a==="set") openSet(); else openTuto(); });
 $("#moreClose").onclick=()=>$("#moreScrim").hidden=true;
 $("#moreScrim").addEventListener("click",e=>{ if(e.target.id==="moreScrim") $("#moreScrim").hidden=true; });
 /* bande des jours (iPhone) : un jour par écran */
@@ -1814,6 +1838,7 @@ window.addEventListener("resize",()=>{ if(view==="semaine") render(); });
 
 /* ---------- Nouveautés (patch notes) ---------- */
 const NEWS=[
+  {v:"2.0",d:"6 nov. 2026",items:["Bilan de la semaine : chaque lundi, un résumé de ta semaine passée (tâches faites, temps par étiquette, habitudes, routine).","Reporte en un geste les tâches non terminées à la nouvelle semaine.","Note ce qui a marché, ce que tu changes et ta priorité n°1. Retrouve le bilan dans Plus → Bilan de la semaine."]},
   {v:"1.9",d:"1er nov. 2026",items:["Notifications sur l'iPhone : tes rappels arrivent même planning fermé (Réglages → Notifications sur l'iPhone).","Nouveautés : cette fenêtre te présente chaque mise à jour."]},
   {v:"1.8",d:"1er nov. 2026",items:["Synchronisation automatique environ 1 s après chaque changement.","Semaine sur téléphone : un jour à la fois, glisse pour changer de jour.","Habitudes sur téléphone : boutons Fait / À moitié / Pas fait et aperçu du mois."]},
   {v:"1.7",d:"1er nov. 2026",items:["Mobile façon iPhone : barre d'onglets en bas, grand titre, menu Plus, bouton +."]},
@@ -1873,6 +1898,57 @@ async function syncJobs(){
   const {error}=await sb.rpc("replace_my_jobs",{jobs}); if(!error) lastJobs=sig;
 }
 function syncJobsSoon(){ clearTimeout(jobsT); jobsT=setTimeout(syncJobs,1500); }
+
+/* ---------- Bilan de la semaine ---------- */
+function weekStats(wk){
+  const days=[...Array(7)].map((_,i)=>addDays(wk,i));
+  let tot=0,done=0,mins=0,doneMins=0; const byLab={}, perDay=[], undone=[];
+  days.forEach(k=>{ let dd=0;
+    cardsFor(k).filter(c=>c.title).forEach(c=>{ const ok=isDone(c,k), m=c.start!=null?(c.dur||60):0; tot++; mins+=m; if(ok){done++;doneMins+=m;dd++;} else if(!c.repeat) undone.push([c,k]);
+      const l=(c.labels.map(catOf).find(Boolean))||{id:"_",name:"Sans étiquette",color:"gris"}; const b=byLab[l.id]||(byLab[l.id]={l,tot:0,done:0,mins:0}); b.tot++; b.mins+=m; if(ok) b.done++; });
+    perDay.push(dd); });
+  const H=S.habits, habs=H.list.filter(h=>h.name).map(h=>{ const v=days.map(k=>H.log[k]&&H.log[k][h.id]).filter(x=>x!=null); return {h,n:v.length,p:v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*100):null}; });
+  const ri=S.routine.items.filter(i=>i.t.trim()), rDays=ri.length? days.filter(k=>(S.routine.done[k]||[]).filter(id=>ri.some(i=>i.id===id)).length>=ri.length).length : 0;
+  const best=perDay.indexOf(Math.max(...perDay));
+  return {days,tot,done,mins,doneMins,byLab:Object.values(byLab).sort((a,b)=>b.mins-a.mins||b.tot-a.tot),habs,rDays,ri:ri.length,best:perDay[best]?best:-1,undone};
+}
+function openReview(wk){
+  const st=weekStats(wk), s0=parseKey(wk), e0=parseKey(addDays(wk,6));
+  S.reviews=S.reviews||{}; const R0=S.reviews[wk]||(S.reviews[wk]={win:"",fix:"",prio:""});
+  const pct=st.tot?Math.round(st.done/st.tot*100):0;
+  const kids=[el("p",{class:"sub"},"Du "+s0.getDate()+" "+s0.toLocaleDateString("fr-FR",{month:"long"})+" au "+e0.getDate()+" "+e0.toLocaleDateString("fr-FR",{month:"long"})),
+    el("div",{class:"kpi4"},
+      el("div",null,el("b",null,st.done+"/"+st.tot),el("span",null,"tâches faites ("+pct+" %)")),
+      el("div",null,el("b",null,durTxt(st.doneMins)),el("span",null,"de travail réalisé sur "+durTxt(st.mins)+" prévus")),
+      el("div",null,el("b",null,st.best>=0?DAYS[st.best]:"—"),el("span",null,"ton jour le plus productif")),
+      el("div",null,el("b",null,st.ri?st.rDays+"/7":"—"),el("span",null,"jours de routine complète")))];
+  if(st.byLab.length) kids.push(el("h3",null,"Où est passé ton temps"),...st.byLab.slice(0,6).map(b=>el("div",{class:"rbar",style:cv(b.l.color)},el("span",null,b.l.name),el("i",null,el("u",{style:"width:"+(b.tot?Math.round(b.done/b.tot*100):0)+"%"})),el("em",null,b.done+"/"+b.tot))));
+  if(st.habs.length) kids.push(el("h3",null,"Habitudes"),...st.habs.map(x=>el("div",{class:"rbar"},el("span",null,x.h.name),el("i",null,el("u",{style:"width:"+(x.p||0)+"%;background:#3FB37F"})),el("em",null,x.p==null?"—":x.p+" %"))));
+  if(st.undone.length){
+    const tw=mondayOf(todayKey());
+    const boxes=st.undone.slice(0,12).map(([c,k])=>{ const cb=el("input",{type:"checkbox"}); cb.checked=true; cb._c=c; cb._k=k; return el("label",null,cb,el("span",null,c.title+" ("+DAYS[wdOf(k)].toLowerCase()+")")); });
+    kids.push(el("h3",null,"Pas terminé ("+st.undone.length+")"),el("div",{class:"left"},...boxes),
+      el("div",{class:"foot"},el("button",{class:"btn",onclick:e=>{ let n=0; boxes.forEach(b=>{ const cb=b.querySelector("input"); if(cb.checked){ const c=cb._c; c.date=addDays(tw,wdOf(cb._k)); n++; } }); save(); render(); e.target.disabled=true; e.target.textContent=n+" tâche(s) reportée(s) à cette semaine"; }},"Reporter la sélection à cette semaine"),
+        el("button",{class:"btn ghost",onclick:e=>{ let n=0; boxes.forEach(b=>{ const cb=b.querySelector("input"); if(cb.checked){ const c=cb._c; c.date=null; c.start=null; n++; } }); save(); render(); e.target.disabled=true; e.target.textContent=n+" tâche(s) dans « À caser »"; }},"Mettre dans « À caser »")));
+  }
+  const ta=(k,label,ph)=>{ const t=el("textarea",{placeholder:ph,maxlength:"400"}); t.value=R0[k]||""; t.oninput=()=>{ R0[k]=t.value; save(); }; return el("label",{class:"f"},el("span",null,label),t); };
+  kids.push(el("h3",null,"Ton bilan"),ta("win","Ce qui a bien marché","Ex. 3 nouvelles créas lancées, ROAS en hausse…"),ta("fix","Ce que je change","Ex. moins de SAV le matin, bloquer 2 h pour la recherche produit…"),ta("prio","Ma priorité n°1 pour cette semaine","Ex. lancer la nouvelle offre"));
+  $("#revH").textContent= st.tot? (pct>=80?"Belle semaine !":pct>=50?"Ta semaine en résumé":"Ta semaine : on rebondit") : "Ta semaine";
+  $("#revBody").replaceChildren(...kids); $("#revScrim").hidden=false; $("#revScrim").dataset.wk=wk;
+}
+function closeReview(){ const wk=$("#revScrim").dataset.wk; $("#revScrim").hidden=true; if(wk&&(!S.reviewSeen||S.reviewSeen<wk)){ S.reviewSeen=wk; save(); } refresh(); }
+$("#revOk").onclick=closeReview;
+$("#revScrim").addEventListener("click",e=>{ if(e.target.id==="revScrim") closeReview(); });
+/* propose le bilan dès qu'une nouvelle semaine commence */
+function maybeWeekly(){
+  const prev=addDays(mondayOf(todayKey()),-7);
+  if(!localStorage.getItem("planning.tuto")||(S.reviewSeen&&S.reviewSeen>=prev)) return;
+  if(document.querySelector(".scrim:not([hidden])")) return;
+  const st=weekStats(prev); if(!st.tot && !st.habs.some(h=>h.n)) return;
+  openReview(prev);
+}
+setTimeout(maybeWeekly,2500);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) setTimeout(maybeWeekly,1500); });
 /* ---------- Tuto de première visite + invitation à se connecter ---------- */
 const TUTO=[
   ["👋","Bienvenue !","Ce planning t'aide à organiser ta semaine, ton année et tes objectifs. Voici l'essentiel en 1 minute."],
@@ -1918,7 +1994,7 @@ document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
   if(!$("#catScrim").hidden){ $("#catScrim").hidden=true; if(cur) drawCard(); return; }
   if(!$("#cardScrim").hidden){ closeCard(); return; }
   $("#setScrim").hidden=true; $("#pop").hidden=true; $("#inbox").classList.remove("open"); });
-[["#moreScrim",()=>$("#moreScrim").hidden=true],["#acctScrim",()=>$("#acctScrim").hidden=true],["#cardScrim",closeCard],["#catScrim",()=>{$("#catScrim").hidden=true; if(cur) drawCard();}],["#setScrim",()=>$("#setScrim").hidden=true]]
+[["#revScrim",closeReview],["#moreScrim",()=>$("#moreScrim").hidden=true],["#acctScrim",()=>$("#acctScrim").hidden=true],["#cardScrim",closeCard],["#catScrim",()=>{$("#catScrim").hidden=true; if(cur) drawCard();}],["#setScrim",()=>$("#setScrim").hidden=true]]
   .forEach(([id,fn])=>$(id).addEventListener("click",e=>{ if(e.target===$(id)) fn(); }));
 setInterval(()=>{ if(document.hidden) return; updateNow(); tick(); },20000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ tick(); if(!drag&&!cur&&view==="semaine") render(); cloudCheck(); } });
